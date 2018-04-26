@@ -1,0 +1,165 @@
+<div id="game">
+<h1 class="title">Ruby Blackjack!</h1>
+<!-- show winner or looser and ask to play again -->
+<% if !@dealer_turn and !@show_hit_stay_buttons%>
+<%if @loser %>
+  <div class="alert alert-error"><%=@loser%></div>
+<% end %>
+<%if @winner %>
+  <div class="alert alert-success"><%=@winner%></div>
+<% end %>
+<h5>Play again?</h5>
+  <% if session[:player_money] > 0 %>
+  <p class="play_again">
+    <a href="/bet" class="btn btn-primary">Yes</a>
+    <a href="/game/over" class="btn ">No</a>
+  </p>
+  <% else %>
+    <p>You're broke! Click <a href="/play_again">here</a> if you would like to start oevr again with $500!</p>
+  <% end %>
+<% end %>
+
+<!-- start Blackjack Table -->
+<% if session[:username] and session[:bet_ammount]%>
+<div class="blackjack_table">
+
+<!-- dealer -->
+<div>
+  <h4 class="name" >Dealer</h4><% if @dealer_total %>
+    <p class="total">Total: <%= @dealer_total %></p>
+    <% if blackjack_or_bust_msg(session[:dealer_hand]) %>
+      <span class="bb_message">
+        <%= blackjack_or_bust_msg(session[:dealer_hand]) %>
+      </span>
+    <% end %>
+    <% end %>
+    <% if !@show_hit_stay_buttons %>
+    <ul class="cards">
+      <% session[:dealer_hand].each do |card| %>
+          <li><img src="/images/cards/<%= card[2] %>" /></li>
+      <% end %>
+    </ul>
+    <% else %>
+    <ul class="cards">
+      <li><img src="/images/cards/cover.jpg" /></li>
+      <li><img src="/images/cards/<%= session[:dealer_hand][1][2] %>" /></li>
+    </ul>
+    <% end %>
+    
+    <!-- show dealer next card button -->
+    <% if @dealer_turn %>
+    <form id="dealer_hits" action="/game/dealer/hit" method="post">
+      <input type="submit" value="Show the dealer's next card" class="btn btn-success btn-small">
+    </form>
+    <% end %>
+
+</div>
+<hr class="style-eight">
+
+<!--player-->
+<div>
+  <ul class="cards">
+  <% session[:player_hand].each do |card| %>
+      <li><img src="/images/cards/<%= card[2] %>" /></li>
+  <% end %>
+  </ul>
+  <h4 class="name"><%= session[:username] %></h4>
+  <p class="total">
+    total: <%= calc_cards(session[:player_hand]) %>
+    <% if blackjack_or_bust_msg(session[:player_hand]) %>
+      <span class="bb_message">
+        <%= blackjack_or_bust_msg(session[:player_hand]) %>
+      </span>
+    <% end %>
+  </p>
+</div>
+
+<!-- hit and stay buttons -->
+<% if @show_hit_stay_buttons %>
+<div class="hit_or_stay">
+<form id="hit_form" action="/game/player/hit" method="post">
+    <input type="submit" value="Hit" class="btn btn-success btn-large">
+</form>
+<form id="stay_form" action="/game/player/stay" method="post">
+    <input type="submit" value="Stay" class="btn btn-warning btn-large">
+</form>
+</div>
+<% end %>
+
+<!-- game stats -->
+<div class="game_stats">
+  <ul>
+    <li>
+     Bank: $<%= session[:player_money] %>
+    </li>
+    <li>
+      Bet: $<%= session[:bet_ammount] %>
+    </li>
+    <li>
+      Current Round: <%= session[:round] %>
+    </li>
+  </ul> 
+</div>
+</div>
+<% end %>
+<!-- end of table -->
+</div>
+
+<!-- Modal -->
+<div id="myModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-header">
+    <% if @bet_form %>
+    <h3 id="myModalLabel">Place your bet.</h3>
+    <% end %>
+    <% if @username_form %>
+    <h3 id="myModalLabel">Welcome to Blackjack!</h3>
+    <% end %>
+  </div>
+  
+  <div class="modal-body">
+  <% if @input_error %>
+  <div class="alert alert-error"><%= @input_error %></div>
+  <% end %>
+    <% if @bet_form %>
+    
+    <h5>Hi <%= session[:username] %>. How much would you like to bet for this round?</h5>
+    <p>
+      You have $<%= session[:player_money] %> <br>
+      Minimum bet is $10
+    </p>
+    
+    <form action="/place_bet" method="post">
+        $<input type="number" step="10" min="10" name="bet_ammount" id="bet_input">
+        <input type="submit" value="Place Bet"  required>
+    </form>
+    <% end %>
+    
+    <% if @username_form %>
+    <p>What is your name?</p>
+    <form action="/set_username" method="post" >
+      <input type="text" name="username"><br>
+      <input type="submit" class="btn" value="submit" required>
+    </form>
+    <% end %>
+
+
+  </div>
+  <div class="modal-footer">
+    
+  </div>
+</div>
+
+
+<% if @show_modal %>
+<script >
+  $(document).ready(function(){
+    $('#myModal').modal({
+      backdrop: 'static',
+      keyboard: false,
+      show: true
+    });
+  });
+</script>
+<% end %>
+
+    
